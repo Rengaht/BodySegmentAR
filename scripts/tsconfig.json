@@ -2,7 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "baseUrl": "/Users/reng/Library/Caches/Facebook/Spark AR Studio/Scripting",
-    "checkJs": true,
+    "checkJs": false,
     "esModuleInterop": true,
     "lib": [
       "ES2019"
@@ -10,7 +10,7 @@
     "outDir": "/Users/reng/Library/Caches/Facebook/Spark AR Studio/Scripting/out-dir",
     "paths": {
       "*": [
-        "skylight-typedefs/f843f9f7a0d36992/*",
+        "skylight-typedefs/5d65f16d5619611c/*",
         "skylight-node_modules/*"
       ]
     },

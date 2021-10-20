@@ -27,10 +27,18 @@ const Random = require('Random');
 var ReactiveModule = require('Reactive');
 
 const Blocks = require('Blocks');
+const Patches= require('Patches');
 
 
 // Use export keyword to make a symbol available in scripting debug console
 export const Diagnostics = require('Diagnostics');
+
+var delayed=false;
+var count=0;
+
+const DISAPPEAR_TIME=3000;
+const GENERATE_TIME=200;
+
 
 // To use variables and functions across files, use export/import keyword
 // export const animationDuration = 10;
@@ -41,93 +49,47 @@ export const Diagnostics = require('Diagnostics');
 (async function () {  // Enables async/await in JS [part 1]
 
 
- Diagnostics.log("run!");
-  // To access scene objects
-  const [fd, material, container] = await Promise.all([
-    Scene.root.findFirst('Focal Distance'),
-    Materials.findFirst('tap_mat'),
-    Scene.root.findFirst('container'),
-  ]);
+    function addBlock(){
 
-  // const [dynamicPlane] = await Promise.all([
+        // Diagnostics.log('add block!');
 
-  //       Scene.create("Plane", {
-  //           "name": "dPlane",
-  //           "width": 0.1,
-  //           "height": 0.1,
-  //           "x": 0,
-  //           "y": 0,
-  //           "hidden": false,
-  //       })
-  //   ]);
-  //   dynamicPlane.material=material;
-  //   device.addChild(dynamicPlane);
-
-  // To access class properties
-  // const directionalLightIntensity = directionalLight.intensity;
-
-  // To log messages to the console
-  // function axisRotation(axis_x, axis_y, axis_z, angle_degrees) {
-  //   var norm = Math.sqrt(axis_x * axis_x + axis_y * axis_y + axis_z * axis_z);
-  //   axis_x /= norm;
-  //   axis_y /= norm;
-  //   axis_z /= norm;
-  //   var angle_radians = angle_degrees * Math.PI / 180.0;
-  //   var cos = Math.cos(angle_radians / 2);
-  //   var sin = Math.sin(angle_radians / 2);
-  //   return ReactiveModule.rotation(cos, axis_x * sin, axis_y * sin, axis_z * sin);
-  // }
-
-  Diagnostics.log('Console message logged from the script.');
-
-	TouchGestures.onTap().subscribe(async (gesture) => {
-
-    // Convert the gesture location to a Point2DSignal in screen space
-    const gestureLocationAsSignal = Reactive.point2d(gesture.location.x, gesture.location.y);
-    const gestureTransform = Scene.unprojectToFocalPlane(gestureLocationAsSignal);
-
-    // Bind the position of the plane to the gesture location
-    // The x value is multiplied by -1 to flip the x axis position, otherwise
-    // it will appear mirrored (this multiplication is not necessary if
-    // using the back camera)
-
-    // firstPlane.transform.x = gestureTransform.x.mul(-1);
-    // firstPlane.transform.y = gestureTransform.y;
-
-    // Log the gesture location to the console
-    Diagnostics.log(gesture.location);
+       Blocks.instantiate('block0',{}).then(async function(block) {
 
 
-    const name="dPlane".concat(Random.random().toString());
-    Diagnostics.log(name.toString());
+            var pos=fd.worldTransform.position;
+            // pos.add(Reactive.pack3(0,.2*count,.2*count));
+            // count++;
+            // if(Reactive.magnitude(pos).pinLastValue()!=0){
+            block.transform.position=pos.pinLastValue().add(new Reactive.vector(0,0,0));
 
-    const [tmp] = await Promise.all([
-    
-        Scene.create("Plane", {
-            "name": name,
-            "width": 0.1,
-            "height": 0.1,
-            "hidden": false,
-        })
+            block.transform.rotation=fd.worldTransform.rotation;//.pinLastValue();
+            block.material=material;
+
+            await container.addChild(block);
+            block.inputs.setBoolean('visible',true);
+            
+
+            Time.setTimeout(function(){
+                Scene.destroy(block);
+            },DISAPPEAR_TIME);
+
+        });  
+    }
+
+    // Diagnostics.log("run!");
+    // To access scene objects
+    const [fd, material, container] = await Promise.all([
+        Scene.root.findFirst('Focal Distance'),
+        Materials.findFirst('material_object'),
+        Scene.root.findFirst('object_container'),
     ]);
 
-    // tmp.transform.position=gestureTransform.pinLastValue();
-    // tmp.transform.rotation=fd.transform.rotation;
-    // tmp.material=material;
-
-    Blocks.instantiate('block0').then(function(block) {
-        block.transform.position=gestureTransform.pinLastValue();
-        block.transform.rotation=fd.transform.rotation;
-        block.material=material;
-        container.addChild(block);
-
-    });  
-
-    // container.addChild(tmp);
 
 
-  });
-
+    var intervalTimer =Time.setInterval(function(){
+        addBlock();
+    }, GENERATE_TIME);    
+   
 
 
 })(); // Enables async/await in JS [part 2]
